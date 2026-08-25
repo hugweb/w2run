@@ -93,7 +93,7 @@ async function fetchRoutes(lat, lon){
     renderRoutes();
     drawAllRoutes();
     selectRoute(0);
-    if(isMobile()) setSheet("half");   // reveal the route cards on mobile
+    if(isMobile()) setSheet("open");   // show routes + detail full-screen on mobile
   }catch(e){
     setStatus("Error: "+e.message, true);
   }
@@ -392,10 +392,9 @@ function sizeSheetScroll(){
   sheetScroll.style.height = Math.max(120, visibleHeight) + "px";
 }
 
-function setSheet(state){ // 'peek' | 'half' | 'open'
+function setSheet(state){ // 'peek' | 'open'
   sheet.classList.remove("sheet-half","sheet-open");
-  if(state==="half") sheet.classList.add("sheet-half");
-  else if(state==="open") sheet.classList.add("sheet-open");
+  if(state==="open") sheet.classList.add("sheet-open");
   // after the transform animation settles, resize scroll area + map
   setTimeout(()=>{ sizeSheetScroll(); map && map.invalidateSize(); }, 320);
 }
@@ -429,9 +428,8 @@ function setSheet(state){ // 'peek' | 'half' | 'open'
     const ty = currentTranslate();
     sheet.style.transform = ""; // hand back to CSS classes
     const h = vh();
-    // snap to nearest of open(0) / half(~45%) / peek(bottom)
-    if(ty < h*0.25) setSheet("open");
-    else if(ty < h*0.6) setSheet("half");
+    // two states: dragged up past ~40% -> open (full scroll); else peek.
+    if(ty < h*0.4) setSheet("open");
     else setSheet("peek");
   };
   sheetHandle.addEventListener("touchstart", onDown, {passive:false});
