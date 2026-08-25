@@ -7,6 +7,8 @@
 html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text)}
 #app{display:flex;height:100vh}
 #sidebar{width:400px;min-width:400px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+/* desktop: the scroll wrapper is a transparent pass-through flex column */
+.sheet-scroll{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
 #mapWrap{flex:1;position:relative}
 #map{position:absolute;inset:0}
 
@@ -102,26 +104,37 @@ header h1 span{color:var(--accent)}
   /* map fills the screen behind the sheet */
   #mapWrap{position:fixed;inset:0;height:100dvh;width:100vw}
 
-  /* sidebar becomes a draggable bottom sheet */
+  /* sidebar becomes a draggable bottom sheet.
+     Height is FIXED to the on-screen visible amount for each snap state, and the
+     inner .sheet-scroll scrolls — so buttons are always reachable regardless of
+     how far the sheet is opened. */
   #sidebar{
     position:fixed;left:0;right:0;bottom:0;
     width:100%;min-width:0;
-    height:88dvh;                 /* full height when expanded */
-    --sheet-peek:225px;           /* how much peeks up when collapsed */
-    transform:translateY(calc(88dvh - var(--sheet-peek)));
+    height:78dvh;                 /* height when fully open */
+    display:flex;flex-direction:column;overflow:hidden;
+    transform:translateY(calc(78dvh - var(--sheet-vis, 230px)));
     transition:transform .28s cubic-bezier(.22,.61,.36,1);
     border-right:none;border-top:1px solid var(--line);
     border-radius:18px 18px 0 0;
     box-shadow:0 -8px 30px rgba(0,0,0,.5);
     z-index:1000;
   }
-  #sidebar.sheet-open{ transform:translateY(0); }
-  #sidebar.sheet-half{ transform:translateY(45dvh); }
+  /* snap states set how much of the sheet is visible; the sheet translates so
+     that 'visible' amount sits above the screen bottom. */
+  #sidebar{ --sheet-vis:230px; }                 /* peek */
+  #sidebar.sheet-half{ --sheet-vis:52dvh; }
+  #sidebar.sheet-open{ --sheet-vis:78dvh; }
+  #sidebar.sheet-half, #sidebar.sheet-open{ transform:translateY(calc(78dvh - var(--sheet-vis))); }
   #sidebar.dragging{ transition:none; }
 
   .sheet-handle{display:flex;justify-content:center;align-items:center;
     padding:8px 0 4px;cursor:grab;flex:none;touch-action:none}
   .sheet-handle span{width:40px;height:5px;border-radius:3px;background:var(--muted);opacity:.5}
+
+  /* the scrollable content area fills the sheet and scrolls independently */
+  .sheet-scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding-bottom:24px}
 
   header{padding:4px 18px 6px}
   header h1{font-size:24px}
@@ -132,8 +145,6 @@ header h1 span{color:var(--accent)}
   .dist-buttons button{padding:12px 0}      /* bigger tap targets */
   .find-btn{padding:15px}                     /* bigger tap target */
 
-  /* the sheet scrolls as ONE column: cards then detail flow together */
-  #sidebar{overflow-y:auto;-webkit-overflow-scrolling:touch}
   header,.controls,.sheet-handle{flex:none}
   .route-list{flex:none;overflow:visible;padding:8px 12px}
   .detail{flex:none;max-height:none;overflow:visible}
@@ -144,7 +155,7 @@ header h1 span{color:var(--accent)}
   .detail-actions .ext-btn{flex:1;text-align:center;padding:13px 10px}
 
   /* keep Leaflet zoom controls clear of the sheet peek */
-  .leaflet-bottom.leaflet-right{margin-bottom:210px}
+  .leaflet-bottom.leaflet-right{margin-bottom:240px}
 }
 
 @media(max-width:760px) and (min-height:1px){
