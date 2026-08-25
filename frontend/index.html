@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1a14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>w2run — find your run</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="app">
+  <aside id="sidebar">
+    <div id="sheetHandle" class="sheet-handle"><span></span></div>
+    <header>
+      <h1>w2<span>run</span></h1>
+      <p class="tag">flat · natural · close to you</p>
+    </header>
+
+    <div class="controls">
+      <label class="ctl-label">Target distance</label>
+      <div class="dist-buttons" id="distButtons">
+        <button data-km="5">5</button>
+        <button data-km="8">8</button>
+        <button data-km="10" class="active">10</button>
+        <button data-km="15">15</button>
+        <button data-km="20">20</button>
+      </div>
+      <button id="findBtn" class="find-btn">Find my routes</button>
+      <div id="status" class="status"></div>
+    </div>
+
+    <div id="routeList" class="route-list"></div>
+    <div id="detail" class="detail hidden"></div>
+  </aside>
+
+  <main id="mapWrap">
+    <div id="map"></div>
+  </main>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

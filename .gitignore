@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+cache/osm_*.json
+cache/elevation.json
+cache/dem/*.tif
+cache/dem/*.hgt
+.DS_Store

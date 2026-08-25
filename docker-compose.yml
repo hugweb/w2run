@@ -1,0 +1,32 @@
+services:
+  w2run:
+    build: .
+    image: w2run:latest
+    container_name: w2run
+    restart: unless-stopped
+    # Persist OSM / elevation / DEM caches across restarts & rebuilds.
+    volumes:
+      - ./cache:/app/cache
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      # ---- Router (HTTPS) ----
+      # Change the Host rule to your domain/subdomain for w2run.
+      - "traefik.http.routers.w2run.rule=Host(`w2run.CHANGE-ME.com`)"
+      - "traefik.http.routers.w2run.entrypoints=websecure"
+      - "traefik.http.routers.w2run.tls=true"
+      # You said you already have a certificate configured in Traefik, so no
+      # certresolver is set here. If you DO want Traefik to fetch one, add:
+      #   - "traefik.http.routers.w2run.tls.certresolver=YOUR_RESOLVER"
+      # ---- Service (which port inside the container) ----
+      - "traefik.http.services.w2run.loadbalancer.server.port=8000"
+      # ---- Optional: redirect HTTP -> HTTPS ----
+      - "traefik.http.routers.w2run-http.rule=Host(`w2run.CHANGE-ME.com`)"
+      - "traefik.http.routers.w2run-http.entrypoints=web"
+      - "traefik.http.routers.w2run-http.middlewares=w2run-redirect"
+      - "traefik.http.middlewares.w2run-redirect.redirectscheme.scheme=https"
+
+networks:
+  traefik:
+    external: true

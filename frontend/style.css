@@ -1,0 +1,153 @@
+:root{
+  --bg:#0f1a14; --panel:#16241b; --panel2:#1d3226;
+  --accent:#4ade80; --accent2:#22c55e; --text:#e7f0ea;
+  --muted:#8ba597; --line:#26402f; --warn:#fbbf24;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text)}
+#app{display:flex;height:100vh}
+#sidebar{width:400px;min-width:400px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+#mapWrap{flex:1;position:relative}
+#map{position:absolute;inset:0}
+
+header{padding:20px 22px 10px}
+header h1{margin:0;font-size:30px;letter-spacing:-1px;font-weight:800}
+header h1 span{color:var(--accent)}
+.tag{margin:4px 0 0;color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:1.5px}
+
+.controls{padding:12px 22px 16px;border-bottom:1px solid var(--line)}
+.ctl-label{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+.dist-buttons{display:flex;gap:6px;margin:8px 0 14px}
+.dist-buttons button{flex:1;padding:10px 0;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:9px;cursor:pointer;font-size:15px;font-weight:600;transition:.15s}
+.dist-buttons button:hover{border-color:var(--accent2)}
+.dist-buttons button.active{background:var(--accent2);border-color:var(--accent);color:#05130b}
+.dist-buttons button::after{content:" km";font-size:11px;opacity:.7}
+.find-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#05130b;font-weight:800;font-size:16px;border-radius:11px;cursor:pointer;letter-spacing:.3px}
+.find-btn:hover{filter:brightness(1.08)}
+.find-btn:disabled{opacity:.5;cursor:default}
+.status{margin-top:10px;font-size:13px;color:var(--muted);min-height:18px}
+.status.err{color:var(--warn)}
+
+.route-list{overflow-y:auto;flex:1;padding:10px 14px}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:10px;cursor:pointer;transition:.15s;position:relative;overflow:hidden}
+.card:hover{border-color:var(--accent2);transform:translateY(-1px)}
+.card.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.card .cat{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);font-weight:700}
+.card .head{display:flex;justify-content:space-between;align-items:baseline;margin:2px 0 8px}
+.card .main-stat{font-size:20px;font-weight:800}
+.card .main-stat small{font-size:13px;color:var(--muted);font-weight:600}
+.card .score{font-size:26px;font-weight:800;color:var(--accent)}
+.card .score small{font-size:12px;color:var(--muted)}
+.bars{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.bar-row{display:flex;align-items:center;gap:8px;font-size:12px}
+.bar-row .lbl{width:64px;color:var(--muted)}
+.bar-track{flex:1;height:6px;background:#0c1610;border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px}
+.bar-row .val{width:44px;text-align:right;color:var(--text)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.chip{font-size:11px;background:#0c1610;border:1px solid var(--line);padding:3px 8px;border-radius:20px;color:var(--muted)}
+.chip b{color:var(--text)}
+
+.detail{padding:16px 18px;border-top:1px solid var(--line);background:var(--panel);max-height:44%;overflow-y:auto}
+.detail.hidden{display:none}
+.detail h3{margin:0 0 10px;font-size:16px}
+.profile-wrap{background:var(--panel2);border-radius:10px;padding:8px;height:150px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.dstat{background:var(--panel2);border-radius:8px;padding:8px 10px}
+.dstat .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.dstat .v{font-size:17px;font-weight:700}
+.ext-btn{display:inline-block;margin-top:6px;padding:9px 14px;background:var(--panel2);border:1px solid var(--accent2);color:var(--accent);border-radius:9px;text-decoration:none;font-size:13px;font-weight:600}
+.detail-actions{display:flex;gap:8px;flex-wrap:wrap}
+.gpx-btn{cursor:pointer;font-family:inherit}
+.gpx-btn:hover{background:var(--accent2);color:#05130b}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.shape-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.5px;
+  background:var(--panel);color:var(--muted);border:1px solid var(--line);
+  padding:1px 6px;border-radius:20px;margin-left:6px;vertical-align:middle;text-transform:none}
+
+/* start / end (turnaround) map pins */
+.endpoint-icon{background:none;border:none}
+.endpoint-pin{width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+  border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.5);display:flex;
+  align-items:center;justify-content:center}
+.endpoint-pin span{transform:rotate(45deg);color:#fff;font-size:12px;font-weight:800}
+.start-pin{background:#22c55e}
+.end-pin{background:#ef4444}
+
+/* direction arrows along the selected route */
+.dir-arrow{background:none;border:none}
+.arrow-glyph{font-size:15px;line-height:18px;text-align:center;
+  text-shadow:0 0 3px #000,0 0 3px #000;transform-origin:center}
+
+/* hover marker linking elevation chart to the map (Komoot-style) */
+.hover-icon{background:none;border:none}
+.hover-dot{width:14px;height:14px;border-radius:50%;background:#fff;
+  border:3px solid var(--accent);box-shadow:0 0 0 2px rgba(0,0,0,.4);
+  position:absolute;left:-7px;top:-7px}
+.hover-label{position:absolute;left:12px;top:-28px;white-space:nowrap;
+  background:rgba(10,20,14,.92);color:#e7f0ea;font-size:12px;font-weight:600;
+  padding:3px 8px;border-radius:7px;border:1px solid var(--accent2);
+  box-shadow:0 2px 8px rgba(0,0,0,.4)}
+
+/* grab handle only shown on mobile bottom-sheet */
+.sheet-handle{display:none}
+
+/* ---------------- Mobile: full-screen map + bottom sheet ---------------- */
+@media(max-width:760px){
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+  #app{display:block;height:100dvh}
+
+  /* map fills the screen behind the sheet */
+  #mapWrap{position:fixed;inset:0;height:100dvh;width:100vw}
+
+  /* sidebar becomes a draggable bottom sheet */
+  #sidebar{
+    position:fixed;left:0;right:0;bottom:0;
+    width:100%;min-width:0;
+    height:88dvh;                 /* full height when expanded */
+    --sheet-peek:225px;           /* how much peeks up when collapsed */
+    transform:translateY(calc(88dvh - var(--sheet-peek)));
+    transition:transform .28s cubic-bezier(.22,.61,.36,1);
+    border-right:none;border-top:1px solid var(--line);
+    border-radius:18px 18px 0 0;
+    box-shadow:0 -8px 30px rgba(0,0,0,.5);
+    z-index:1000;
+  }
+  #sidebar.sheet-open{ transform:translateY(0); }
+  #sidebar.sheet-half{ transform:translateY(45dvh); }
+  #sidebar.dragging{ transition:none; }
+
+  .sheet-handle{display:flex;justify-content:center;align-items:center;
+    padding:8px 0 4px;cursor:grab;flex:none;touch-action:none}
+  .sheet-handle span{width:40px;height:5px;border-radius:3px;background:var(--muted);opacity:.5}
+
+  header{padding:4px 18px 6px}
+  header h1{font-size:24px}
+  .tag{font-size:11px}
+
+  .controls{padding:8px 18px 12px}
+  .dist-buttons{margin:6px 0 10px}
+  .dist-buttons button{padding:12px 0}      /* bigger tap targets */
+  .find-btn{padding:15px}                     /* bigger tap target */
+
+  /* the sheet scrolls as ONE column: cards then detail flow together */
+  #sidebar{overflow-y:auto;-webkit-overflow-scrolling:touch}
+  header,.controls,.sheet-handle{flex:none}
+  .route-list{flex:none;overflow:visible;padding:8px 12px}
+  .detail{flex:none;max-height:none;overflow:visible}
+
+  /* cards a touch more compact but tappable */
+  .card{padding:14px 15px}
+
+  .detail-actions .ext-btn{flex:1;text-align:center;padding:13px 10px}
+
+  /* keep Leaflet zoom controls clear of the sheet peek */
+  .leaflet-bottom.leaflet-right{margin-bottom:210px}
+}
+
+@media(max-width:760px) and (min-height:1px){
+  /* elevation profile a bit shorter on small screens */
+  .profile-wrap{height:130px}
+}

@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+.DS_Store
+# don't ship local caches into the image; the compose volume provides them
+cache/osm_*.json
+cache/elevation.json
+# keep DEM tiles out of the image (large); mount them via the cache volume
+cache/dem/*.tif
+cache/dem/*.hgt
+README.md
