@@ -20,18 +20,17 @@ mobile Safari/Chrome).
 2. Edit `docker-compose.yml` and replace **`w2run.CHANGE-ME.com`** (3 places)
    with your domain/subdomain. If you want Traefik to fetch the cert via ACME,
    uncomment the `certresolver` label; otherwise it uses your existing cert.
-3. (Optional, recommended) Put a Copernicus GLO-30 DEM tile for your region in
-   `cache/dem/` for accurate, rate-limit-free elevation:
-   ```bash
-   ./scripts/download_dem.sh <floor_lat> <floor_lon>
-   # e.g. Pyrenees: ./scripts/download_dem.sh 42 -1
-   ```
-4. Build & start:
-   ```bash
-   docker compose up -d --build
-   ```
-5. Open `https://your-domain` on your phone → tap **Find my routes** → allow
-   location. (Geolocation only prompts over HTTPS/localhost.)
+ 3. Build & start:
+    ```bash
+    docker compose up -d --build
+    ```
+ 4. Open `https://your-domain` on your phone → tap **Find my routes** → allow
+    location. (Geolocation only prompts over HTTPS/localhost.)
+
+DEM elevation tiles are **auto-managed**: the app downloads the Copernicus
+GLO-30 tile(s) for the current search area on first use and deletes tiles from
+previously-searched areas, so disk usage stays at just a few tiles (~40 MB each).
+`./scripts/download_dem.sh` is only needed if you want to pre-seed a tile.
 
 Notes:
 - `./cache` is bind-mounted, so OSM/elevation caches and DEM tiles persist

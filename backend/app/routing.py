@@ -243,6 +243,14 @@ def generate_routes(lat, lon, target_m, preferences=None, max_routes=8):
         preferences = list(PREFERENCES.keys())
 
     radius = target_m / 6.3 * 1.35 + 600  # cover triangular loop + buffer
+
+    # Keep only the DEM tile(s) for THIS area on disk: download the ones we need
+    # and delete tiles from previously-searched areas (bounded disk usage).
+    try:
+        dem.sync_tiles(lat, lon, radius)
+    except Exception:
+        pass  # fall back to elevation API if tile sync fails
+
     G, source = osm.build_graph(lat, lon, radius)
 
     # Elevation strategy:

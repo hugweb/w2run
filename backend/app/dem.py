@@ -28,6 +28,16 @@ class _LocalDEM:
     """Opens all DEM rasters in cache/dem and samples them."""
     def __init__(self):
         self.datasets = []
+        self.reload()
+
+    def reload(self):
+        # close any previously-open datasets before reopening
+        for ds in self.datasets:
+            try:
+                ds.close()
+            except Exception:
+                pass
+        self.datasets = []
         if not _HAS_RASTERIO:
             return
         for f in config.DEM_DIR.glob("*"):
@@ -48,6 +58,82 @@ class _LocalDEM:
                 except Exception:
                     continue
         return None
+
+
+# ---------------------------------------------------------------------------
+# Automatic tile management: keep ONLY the Copernicus GLO-30 tiles covering the
+# current search area. When the user's location changes, unneeded tiles are
+# deleted and the newly-needed ones are downloaded. This bounds disk usage to a
+# few tiles (~40 MB each) rather than accumulating tiles for every visited area.
+# ---------------------------------------------------------------------------
+COPERNICUS_BASE = "https://copernicus-dem-30m.s3.amazonaws.com"
+
+
+def _tile_name(tile_lat, tile_lon):
+    """Copernicus tile id for the 1x1 degree cell whose SW corner is
+    (tile_lat, tile_lon), both integers."""
+    ns = "N" if tile_lat >= 0 else "S"
+    ew = "E" if tile_lon >= 0 else "W"
+    return (f"Copernicus_DSM_COG_10_{ns}{abs(tile_lat):02d}_00_"
+            f"{ew}{abs(tile_lon):03d}_00_DEM")
+
+
+def _needed_tiles(lat, lon, radius_m):
+    """Set of tile ids covering the bounding box of the search area."""
+    import math
+    dlat = radius_m / 111320.0
+    dlon = radius_m / (111320.0 * max(math.cos(math.radians(lat)), 0.1))
+    lats = range(math.floor(lat - dlat), math.floor(lat + dlat) + 1)
+    lons = range(math.floor(lon - dlon), math.floor(lon + dlon) + 1)
+    return {_tile_name(la, lo) for la in lats for lo in lons}
+
+
+def _download_tile(tile_id):
+    """Download one Copernicus tile to cache/dem. Returns True on success."""
+    dest = config.DEM_DIR / f"{tile_id}.tif"
+    if dest.exists():
+        return True
+    url = f"{COPERNICUS_BASE}/{tile_id}/{tile_id}.tif"
+    try:
+        with requests.get(url, stream=True, timeout=120) as r:
+            if r.status_code != 200:
+                return False  # ocean tiles legitimately don't exist -> API fallback
+            tmp = dest.with_suffix(".tif.part")
+            with open(tmp, "wb") as f:
+                for chunk in r.iter_content(chunk_size=1 << 20):
+                    f.write(chunk)
+            tmp.rename(dest)
+        return True
+    except Exception:
+        # clean up any partial file
+        try:
+            dest.with_suffix(".tif.part").unlink(missing_ok=True)
+        except Exception:
+            pass
+        return False
+
+
+def sync_tiles(lat, lon, radius_m):
+    """Ensure exactly the tiles for this area are on disk: download the needed
+    ones, delete everything else, then reload. Safe no-op without rasterio."""
+    if not _HAS_RASTERIO:
+        return
+    needed = _needed_tiles(lat, lon, radius_m)
+
+    # delete tiles that are no longer needed (frees disk on location change)
+    for f in config.DEM_DIR.glob("*"):
+        if f.suffix.lower() in (".tif", ".tiff", ".hgt"):
+            if f.stem not in needed:
+                try:
+                    f.unlink()
+                except Exception:
+                    pass
+
+    # download any needed tiles we don't have yet
+    for tile_id in needed:
+        _download_tile(tile_id)
+
+    _local.reload()
 
 
 _local = _LocalDEM()
@@ -173,7 +259,7 @@ def _fill_gaps(vals):
 
 def source_name():
     if _local.datasets:
-        return f"local DEM ({len(_local.datasets)} tiles)"
+        return f"local DEM ({len(_local.datasets)} tile(s), auto-managed)"
     if _HAS_RASTERIO:
-        return "opentopodata SRTM30m (no local tiles found)"
+        return "opentopodata SRTM30m (DEM tile unavailable here)"
     return "opentopodata SRTM30m (install rasterio for local DEM)"
