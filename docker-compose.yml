@@ -11,23 +11,15 @@ services:
       - website_virtual-network
     labels:
       - "traefik.enable=true"
-      # Tell Traefik which network to use to reach this container.
       - "traefik.docker.network=website_virtual-network"
-      # ---- Router (HTTPS) ----
-      # Change the Host rule to your domain/subdomain for w2run.
-      - "traefik.http.routers.w2run.rule=Host(`w2run.CHANGE-ME.com`)"
+      # ---- Router (HTTPS) — change the Host to your subdomain ----
+      - "traefik.http.routers.w2run.rule=Host(`w2run.hugues.life`)"
       - "traefik.http.routers.w2run.entrypoints=websecure"
       - "traefik.http.routers.w2run.tls=true"
-      # You said you already have a certificate configured in Traefik, so no
-      # certresolver is set here. If you DO want Traefik to fetch one, add:
-      #   - "traefik.http.routers.w2run.tls.certresolver=YOUR_RESOLVER"
-      # ---- Service (which port inside the container) ----
-      - "traefik.http.services.w2run.loadbalancer.server.port=8000"
-      # ---- Optional: redirect HTTP -> HTTPS ----
-      - "traefik.http.routers.w2run-http.rule=Host(`w2run.CHANGE-ME.com`)"
-      - "traefik.http.routers.w2run-http.entrypoints=web"
-      - "traefik.http.routers.w2run-http.middlewares=w2run-redirect"
-      - "traefik.http.middlewares.w2run-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.w2run.tls.certresolver=default"
+      - "traefik.http.routers.w2run.service=w2run-svc"
+      # ---- Service (container port) ----
+      - "traefik.http.services.w2run-svc.loadbalancer.server.port=8000"
 
 networks:
   website_virtual-network:
