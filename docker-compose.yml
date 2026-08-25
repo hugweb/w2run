@@ -8,9 +8,11 @@ services:
     volumes:
       - ./cache:/app/cache
     networks:
-      - traefik
+      - website_virtual-network
     labels:
       - "traefik.enable=true"
+      # Tell Traefik which network to use to reach this container.
+      - "traefik.docker.network=website_virtual-network"
       # ---- Router (HTTPS) ----
       # Change the Host rule to your domain/subdomain for w2run.
       - "traefik.http.routers.w2run.rule=Host(`w2run.CHANGE-ME.com`)"
@@ -28,5 +30,5 @@ services:
       - "traefik.http.middlewares.w2run-redirect.redirectscheme.scheme=https"
 
 networks:
-  traefik:
+  website_virtual-network:
     external: true
