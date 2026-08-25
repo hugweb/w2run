@@ -93,7 +93,7 @@ async function fetchRoutes(lat, lon){
     renderRoutes();
     drawAllRoutes();
     selectRoute(0);
-    if(isMobile()) setSheet("open");   // show routes + detail full-screen on mobile
+    if(isMobile()) setSheet("half");   // show routes with the map still visible
   }catch(e){
     setStatus("Error: "+e.message, true);
   }
@@ -131,7 +131,7 @@ function renderRoutes(){
         <span class="chip">Start <b>${Math.round(m.start_distance_m)} m</b></span>
         <span class="chip">${b.difficulty}</span>
       </div>`;
-    div.addEventListener("click", ()=>{ selectRoute(i); if(isMobile()) setSheet("open"); });
+    div.addEventListener("click", ()=>{ selectRoute(i); if(isMobile()) setSheet("half"); });
     list.appendChild(div);
   });
 }
@@ -163,7 +163,7 @@ function selectRoute(i){
   // on mobile the bottom sheet covers the lower part of the map; pad the fit so
   // the whole route stays visible above the sheet.
   const fitOpts = isMobile()
-    ? {paddingTopLeft:[30,60], paddingBottomRight:[30, Math.round(window.innerHeight*0.45)]}
+    ? {paddingTopLeft:[30,60], paddingBottomRight:[30, Math.round(window.innerHeight*0.62)]}
     : {padding:[40,40]};
   map.fitBounds(routeLayers[i].getBounds(), fitOpts);
   drawDirectionArrows(rt.coords, COLORS[i%COLORS.length]);
@@ -392,9 +392,10 @@ function sizeSheetScroll(){
   sheetScroll.style.height = Math.max(120, visibleHeight) + "px";
 }
 
-function setSheet(state){ // 'peek' | 'open'
+function setSheet(state){ // 'peek' | 'half' | 'open'
   sheet.classList.remove("sheet-half","sheet-open");
-  if(state==="open") sheet.classList.add("sheet-open");
+  if(state==="half") sheet.classList.add("sheet-half");
+  else if(state==="open") sheet.classList.add("sheet-open");
   // after the transform animation settles, resize scroll area + map
   setTimeout(()=>{ sizeSheetScroll(); map && map.invalidateSize(); }, 320);
 }
@@ -428,8 +429,9 @@ function setSheet(state){ // 'peek' | 'open'
     const ty = currentTranslate();
     sheet.style.transform = ""; // hand back to CSS classes
     const h = vh();
-    // two states: dragged up past ~40% -> open (full scroll); else peek.
-    if(ty < h*0.4) setSheet("open");
+    // two-plus states: open (full) / half (map visible) / peek.
+    if(ty < h*0.15) setSheet("open");
+    else if(ty < h*0.55) setSheet("half");
     else setSheet("peek");
   };
   sheetHandle.addEventListener("touchstart", onDown, {passive:false});
@@ -438,11 +440,12 @@ function setSheet(state){ // 'peek' | 'open'
   sheetHandle.addEventListener("mousedown", onDown);
   window.addEventListener("mousemove", onMove);
   window.addEventListener("mouseup", onUp);
-  // tap the handle to toggle open/peek
+  // tap the handle to cycle peek -> half -> open -> peek
   sheetHandle.addEventListener("click", ()=>{
     if(!isMobile()) return;
     if(sheet.classList.contains("sheet-open")) setSheet("peek");
-    else setSheet("open");
+    else if(sheet.classList.contains("sheet-half")) setSheet("open");
+    else setSheet("half");
   });
 })();
 

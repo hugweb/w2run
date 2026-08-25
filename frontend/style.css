@@ -119,10 +119,13 @@ header h1 span{color:var(--accent)}
     box-shadow:0 -8px 30px rgba(0,0,0,.5);
     z-index:1000;
   }
-  /* how much of the sheet is visible in each snap state */
+  /* Snap states. "half" keeps ~40% of the map visible while the sheet content
+     is fully scrollable (so you can drag the elevation graph and watch the
+     point move on the visible map). "open" is near full-screen. */
   #sidebar{ --sheet-vis:210px; }                 /* peek: controls only */
-  #sidebar.sheet-open{ --sheet-vis:94dvh; }      /* near full-screen, scrollable */
-  #sidebar.sheet-open{ transform:translateY(calc(100dvh - var(--sheet-vis))); }
+  #sidebar.sheet-half{ --sheet-vis:60dvh; }      /* map stays visible above */
+  #sidebar.sheet-open{ --sheet-vis:92dvh; }      /* near full-screen */
+  #sidebar.sheet-half, #sidebar.sheet-open{ transform:translateY(calc(100dvh - var(--sheet-vis))); }
   #sidebar.dragging{ transition:none; }
 
   .sheet-handle{display:flex;justify-content:center;align-items:center;
