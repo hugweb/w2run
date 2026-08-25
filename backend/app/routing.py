@@ -444,8 +444,14 @@ def generate_routes(lat, lon, target_m, preferences=None, max_routes=8):
 
     # pick category winners for diversity
     result = _select_diverse(scored, max_routes, target_m)
-    return {"routes": result, "source": source,
+    resp = {"routes": result, "source": source,
             "elevation_source": dem.source_name()}
+    # Elevation-aware features (guaranteed flat route, out-and-back, flat routing)
+    # require a local DEM. Tell the UI when they're unavailable so the missing
+    # flat option is explained rather than silently absent.
+    if not have_local_dem:
+        resp["elevation_limited"] = True
+    return resp
 
 
 def _guaranteed_flat(G, nidx, start_nodes, target_m, max_gain):

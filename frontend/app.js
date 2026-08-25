@@ -87,7 +87,9 @@ async function fetchRoutes(lat, lon){
     }
     routesData = data.routes;
     const src = data.source === "mock" ? " ⚠︎ demo network (no OSM data reachable)" : "";
-    setStatus(`Found ${data.routes.length} routes · ${data.source} · elev: ${data.elevation_source||"n/a"}${src}`);
+    const flatNote = data.elevation_limited
+      ? " · ⚠ flat-route mode limited (no local DEM)" : "";
+    setStatus(`Found ${data.routes.length} routes · ${data.source} · elev: ${data.elevation_source||"n/a"}${src}${flatNote}`);
     renderRoutes();
     drawAllRoutes();
     selectRoute(0);
