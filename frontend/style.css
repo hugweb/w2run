@@ -130,10 +130,10 @@ header h1 span{color:var(--accent)}
     padding:8px 0 4px;cursor:grab;flex:none;touch-action:none}
   .sheet-handle span{width:40px;height:5px;border-radius:3px;background:var(--muted);opacity:.5}
 
-  /* the scrollable content area fills the sheet and scrolls independently.
-     Generous bottom padding so the last buttons always clear the screen edge. */
-  .sheet-scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
-    padding-bottom:120px}
+  /* the scrollable content area. Its height is set explicitly in JS to the
+     visible on-screen amount, so content scrolls and buttons stay reachable. */
+  .sheet-scroll{min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding-bottom:40px}
 
   header{padding:4px 18px 6px}
   header h1{font-size:24px}

@@ -377,14 +377,27 @@ initMap();
 // ---------------- Mobile bottom-sheet ----------------
 const sheet = document.getElementById("sidebar");
 const sheetHandle = document.getElementById("sheetHandle");
+const sheetScroll = document.getElementById("sheetScroll");
 const isMobile = () => window.matchMedia("(max-width:760px)").matches;
+
+// Explicitly size the scrollable area to the space actually visible on screen,
+// so its content scrolls and the buttons at the bottom are always reachable.
+// (Relying on CSS dvh + translate alone clips content in some mobile browsers.)
+function sizeSheetScroll(){
+  if(!isMobile() || !sheetScroll){ if(sheetScroll) sheetScroll.style.height=""; return; }
+  const rect = sheet.getBoundingClientRect();       // sheet's on-screen box
+  const handleH = sheetHandle ? sheetHandle.offsetHeight : 20;
+  const visibleTop = Math.max(rect.top, 0);
+  const visibleHeight = window.innerHeight - visibleTop - handleH;
+  sheetScroll.style.height = Math.max(120, visibleHeight) + "px";
+}
 
 function setSheet(state){ // 'peek' | 'half' | 'open'
   sheet.classList.remove("sheet-half","sheet-open");
   if(state==="half") sheet.classList.add("sheet-half");
   else if(state==="open") sheet.classList.add("sheet-open");
-  // let Leaflet recompute size after the sheet animates
-  setTimeout(()=>map && map.invalidateSize(), 320);
+  // after the transform animation settles, resize scroll area + map
+  setTimeout(()=>{ sizeSheetScroll(); map && map.invalidateSize(); }, 320);
 }
 
 (function initSheetDrag(){
@@ -408,6 +421,7 @@ function setSheet(state){ // 'peek' | 'half' | 'open'
     const y = (e.touches?e.touches[0].clientY:e.clientY);
     let ty = Math.max(0, startTransform + (y-startY));
     sheet.style.transform = `translateY(${ty}px)`;
+    sizeSheetScroll();   // keep scroll area sized live while dragging
   };
   const onUp = ()=>{
     if(!dragging) return;
@@ -455,8 +469,10 @@ function setSheet(state){ // 'peek' | 'half' | 'open'
   });
 })();
 
-// keep the map sized correctly through orientation / viewport changes
-window.addEventListener("resize", ()=>{ if(map) map.invalidateSize(); });
+// keep the map + sheet sized correctly through orientation / viewport changes
+window.addEventListener("resize", ()=>{ if(map) map.invalidateSize(); sizeSheetScroll(); });
 window.addEventListener("orientationchange", ()=>{
-  setTimeout(()=>map && map.invalidateSize(), 300);
+  setTimeout(()=>{ map && map.invalidateSize(); sizeSheetScroll(); }, 300);
 });
+// initial sizing (peek state on load)
+sizeSheetScroll();
