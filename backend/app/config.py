@@ -1,4 +1,5 @@
 """Configuration and scoring weights for w2run."""
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -10,7 +11,14 @@ DEM_DIR.mkdir(exist_ok=True)
 OVERPASS_ENDPOINTS = [
     "https://overpass-api.de/api/interpreter",
     "https://overpass.kumi.systems/api/interpreter",
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    "https://overpass.private.coffee/api/interpreter",
 ]
+
+# When True, a synthetic "mock" path network is used if Overpass is unreachable
+# (handy for offline dev). In production this should be False so users never see
+# the fake grid — they get a clear "try again" error instead.
+ALLOW_MOCK_FALLBACK = os.environ.get("W2RUN_ALLOW_MOCK", "0") == "1"
 
 # opentopodata public fallback (SRTM 30m). 1 req/s, 100 locations/req.
 OPENTOPODATA_URL = "https://api.opentopodata.org/v1/srtm30m"

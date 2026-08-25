@@ -54,21 +54,24 @@ def fetch_osm(lat, lon, radius):
         return cached
 
     query = f"""
-    [out:json][timeout:60];
+    [out:json][timeout:45];
     (
       way{WALKABLE_FILTER}(around:{int(radius)},{lat},{lon});
     );
     (._;>;);
     out body;
     """
+    # Try each mirror; on a transient failure move to the next. Endpoints are
+    # ordered by reliability. A 200 with valid JSON wins.
     for endpoint in config.OVERPASS_ENDPOINTS:
         try:
             r = requests.post(endpoint, data={"data": query},
-                              headers=HEADERS, timeout=90)
+                              headers=HEADERS, timeout=60)
             if r.status_code == 200:
                 data = r.json()
-                _save_cache(key, data)
-                return data
+                if data.get("elements"):
+                    _save_cache(key, data)
+                    return data
         except Exception:
             continue
     return None
@@ -93,10 +96,12 @@ def _nature_score(tags):
 
 
 def build_graph(lat, lon, radius):
-    """Build weighted graph from OSM. Returns (graph, source_str)."""
+    """Build weighted graph from OSM. Returns (graph, source_str).
+    On Overpass failure returns (mock, "mock") only if mock fallback is enabled,
+    otherwise (None, "unavailable")."""
     data = fetch_osm(lat, lon, radius)
     if data is None or not data.get("elements"):
-        return build_mock_graph(lat, lon, radius), "mock"
+        return _fallback(lat, lon, radius)
 
     nodes = {}
     ways = []
@@ -134,13 +139,22 @@ def build_graph(lat, lon, radius):
 
     # keep only the largest connected component (avoids dead islands)
     if G.number_of_nodes() == 0:
-        return build_mock_graph(lat, lon, radius), "mock"
+        return _fallback(lat, lon, radius)
     largest = max(nx.connected_components(G), key=len)
     G = G.subgraph(largest).copy()
     if G.number_of_edges() < 20:
-        return build_mock_graph(lat, lon, radius), "mock"
+        return _fallback(lat, lon, radius)
     G = simplify_graph(G)
     return G, "osm"
+
+
+def _fallback(lat, lon, radius):
+    """Return the synthetic network only when explicitly enabled (dev/offline);
+    otherwise signal that OSM data is unavailable so the user gets a real error
+    instead of the fake grid."""
+    if config.ALLOW_MOCK_FALLBACK:
+        return build_mock_graph(lat, lon, radius), "mock"
+    return None, "unavailable"
 
 
 def simplify_graph(G):

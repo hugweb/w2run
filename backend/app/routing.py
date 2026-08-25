@@ -252,6 +252,10 @@ def generate_routes(lat, lon, target_m, preferences=None, max_routes=8):
         pass  # fall back to elevation API if tile sync fails
 
     G, source = osm.build_graph(lat, lon, radius)
+    if G is None:
+        return {"routes": [], "source": source,
+                "error": "Map data service is busy right now. Please try again "
+                         "in a few seconds."}
 
     # Elevation strategy:
     #  - With a LOCAL DEM (rasterio tiles) sampling is instant, so we fill all
