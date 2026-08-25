@@ -6,9 +6,11 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# System libs for rasterio / GDAL (local DEM sampling) and curl for healthcheck.
+# System libs: curl for healthcheck; libexpat1 is needed by rasterio/GDAL at
+# runtime on slim Debian.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
+        libexpat1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -16,7 +18,10 @@ WORKDIR /app
 # Install Python deps first for better layer caching.
 COPY requirements.txt .
 # rasterio ships manylinux wheels bundling GDAL, so no apt GDAL needed.
-RUN pip install -r requirements.txt && pip install "rasterio>=1.3"
+# Fail the build loudly if rasterio can't be imported, so we never ship an
+# image that silently falls back to the (rate-limited) elevation API.
+RUN pip install -r requirements.txt \
+    && python -c "import rasterio; print('rasterio', rasterio.__version__, 'OK')"
 
 # App code
 COPY backend ./backend

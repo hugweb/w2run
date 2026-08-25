@@ -20,8 +20,13 @@ from . import config
 try:
     import rasterio
     _HAS_RASTERIO = True
-except Exception:
+    _RASTERIO_ERROR = None
+except Exception as _e:
     _HAS_RASTERIO = False
+    _RASTERIO_ERROR = repr(_e)
+    import sys as _sys
+    print(f"[w2run] rasterio unavailable, using elevation API fallback: "
+          f"{_RASTERIO_ERROR}", file=_sys.stderr)
 
 
 class _LocalDEM:
