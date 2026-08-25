@@ -437,19 +437,21 @@ function setSheet(state){ // 'peek' | 'half' | 'open'
 // On open: if we can't use geolocation (insecure context), tell the user up
 // front. Otherwise auto-start on desktop; on mobile wait for the button tap so
 // iOS Safari shows the permission prompt (it needs a user gesture).
+// On open: try to get location and start immediately (desktop AND mobile).
+// Modern iOS/Android browsers show the permission prompt on load; if it's
+// denied or dismissed, the "Find my routes" button re-requests on tap.
 (function bootstrap(){
   if(window.isSecureContext === false){
     setStatus("Location needs a secure connection. Open via <b>https://</b> "+
       "(or <b>localhost</b> on your computer). Then tap “Find my routes”.", true);
     return;
   }
-  if(isMobile()){
-    setStatus("Tap “Find my routes” to share your location.");
-    return;
-  }
   requestLocation(pos=>{
     document.getElementById("findBtn").disabled = true;
     fetchRoutes(pos.lat, pos.lon);
+  }, ()=>{
+    // auto-request denied/dismissed: leave the button ready for a manual retry
+    document.getElementById("findBtn").disabled = false;
   });
 })();
 
