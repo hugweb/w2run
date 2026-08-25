@@ -169,6 +169,7 @@ function selectRoute(i){
   drawDirectionArrows(rt.coords, COLORS[i%COLORS.length]);
   drawEndpoints(rt);
   showDetail(rt, i);
+  if(isMobile()) requestAnimationFrame(sizeSheetScroll);  // content changed → resize scroll
 }
 
 let endpointMarkers = [];
@@ -380,23 +381,26 @@ const sheetHandle = document.getElementById("sheetHandle");
 const sheetScroll = document.getElementById("sheetScroll");
 const isMobile = () => window.matchMedia("(max-width:760px)").matches;
 
-// Explicitly size the scrollable area to the space actually visible on screen,
-// so its content scrolls and the buttons at the bottom are always reachable.
-// (Relying on CSS dvh + translate alone clips content in some mobile browsers.)
+// Explicitly size the scrollable area to the space visible on screen for the
+// CURRENT snap state, so content scrolls and the bottom buttons are reachable.
 function sizeSheetScroll(){
   if(!isMobile() || !sheetScroll){ if(sheetScroll) sheetScroll.style.height=""; return; }
-  const rect = sheet.getBoundingClientRect();       // sheet's on-screen box
+  const H = window.innerHeight;
+  // visible sheet height per state (must match the CSS --sheet-vis values)
+  let vis;
+  if(sheet.classList.contains("sheet-open")) vis = H * 0.92;
+  else if(sheet.classList.contains("sheet-half")) vis = H * 0.60;
+  else vis = 210; // peek
   const handleH = sheetHandle ? sheetHandle.offsetHeight : 20;
-  const visibleTop = Math.max(rect.top, 0);
-  const visibleHeight = window.innerHeight - visibleTop - handleH;
-  sheetScroll.style.height = Math.max(120, visibleHeight) + "px";
+  sheetScroll.style.height = Math.max(120, vis - handleH) + "px";
 }
 
 function setSheet(state){ // 'peek' | 'half' | 'open'
   sheet.classList.remove("sheet-half","sheet-open");
   if(state==="half") sheet.classList.add("sheet-half");
   else if(state==="open") sheet.classList.add("sheet-open");
-  // after the transform animation settles, resize scroll area + map
+  // size immediately (best-effort) and again after the transform settles
+  sizeSheetScroll();
   setTimeout(()=>{ sizeSheetScroll(); map && map.invalidateSize(); }, 320);
 }
 
