@@ -6,3 +6,4 @@ cache/elevation.json
 cache/dem/*.tif
 cache/dem/*.hgt
 .DS_Store
+.env

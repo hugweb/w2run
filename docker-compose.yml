@@ -12,8 +12,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=website_virtual-network"
-      # ---- Router (HTTPS) — change the Host to your subdomain ----
-      - "traefik.http.routers.w2run.rule=Host(`w2run.hugues.life`)"
+      # ---- Router (HTTPS) — set W2RUN_DOMAIN in a .env file on the server ----
+      - "traefik.http.routers.w2run.rule=Host(`${W2RUN_DOMAIN}`)"
       - "traefik.http.routers.w2run.entrypoints=websecure"
       - "traefik.http.routers.w2run.tls=true"
       - "traefik.http.routers.w2run.tls.certresolver=default"

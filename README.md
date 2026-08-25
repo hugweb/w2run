@@ -13,19 +13,24 @@ for pre-existing routes, so it can construct genuinely different alternatives.
 
 The app ships as a single container serving both API and frontend on port 8000.
 The included `docker-compose.yml` wires it to an **existing Traefik** on an
-external `traefik` network with HTTPS (required for browser geolocation on
-mobile Safari/Chrome).
+external network with HTTPS (required for browser geolocation on mobile
+Safari/Chrome). Defaults assume a Traefik network named
+`website_virtual-network`, entrypoint `websecure`, and ACME `certresolver=default`
+— adjust in `docker-compose.yml` if yours differ.
 
-1. Copy the project to your VPS, e.g. `/home/docker/w2run/`.
-2. Edit `docker-compose.yml` and replace **`w2run.CHANGE-ME.com`** (3 places)
-   with your domain/subdomain. If you want Traefik to fetch the cert via ACME,
-   uncomment the `certresolver` label; otherwise it uses your existing cert.
- 3. Build & start:
-    ```bash
-    docker compose up -d --build
-    ```
- 4. Open `https://your-domain` on your phone → tap **Find my routes** → allow
-    location. (Geolocation only prompts over HTTPS/localhost.)
+1. Clone the repo onto your VPS, e.g. `/home/docker/w2run/`.
+2. Set your domain via a `.env` file (kept out of git):
+   ```bash
+   cp .env.example .env
+   echo "W2RUN_DOMAIN=w2run.yourdomain.com" > .env
+   ```
+   Make sure DNS for that subdomain points to your VPS.
+3. Build & start:
+   ```bash
+   docker compose up -d --build
+   ```
+4. Open `https://<your-domain>` on your phone → tap **Find my routes** → allow
+   location. (Geolocation only prompts over HTTPS/localhost.)
 
 DEM elevation tiles are **auto-managed**: the app downloads the Copernicus
 GLO-30 tile(s) for the current search area on first use and deletes tiles from
