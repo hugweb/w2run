@@ -442,6 +442,14 @@ def generate_routes(lat, lon, target_m, preferences=None, max_routes=8):
         if flat:
             scored.append(flat)
 
+    # Enforce the circular requirement: every route must start and end at the
+    # same point. Snap small gaps shut, drop anything that isn't a real loop.
+    scored = [r for r in (_close_loop(x) for x in scored) if r]
+    if not scored:
+        return {"routes": [], "source": source,
+                "error": "Could not construct circular routes of the target "
+                         "distance here."}
+
     # pick category winners for diversity
     result = _select_diverse(scored, max_routes, target_m)
     resp = {"routes": result, "source": source,
@@ -503,6 +511,10 @@ def _guaranteed_flat(G, nidx, start_nodes, target_m, max_gain):
         max_repeats_by_gain = int(max_gain / max(leg_gain, 1.0))
         repeats_for_dist = int((target_m * 0.97) / turn_len) + 1
         n_legs = max(2, min(repeats_for_dist, max_repeats_by_gain))
+        # Routes must be circular: an odd number of legs would finish at the far
+        # end of the shuttle. Round to an even count so we always come back.
+        if n_legs % 2:
+            n_legs += 1
 
         one_leg = turn
         seq = [start]
@@ -620,6 +632,30 @@ def _add_out_and_back(G, nidx, heur, start_nodes, target_m,
             "start_dist": start_dist, "pref": "flattest",
             "start": [slat, slon], "shape": "out-and-back",
         })
+
+
+def _close_loop(route):
+    """Every route must be circular: finish where it started. If the geometry
+    ends slightly away from the start (graph simplification can leave a small
+    gap), snap it shut by appending the start point. Routes that end too far
+    away to close honestly are rejected."""
+    coords = route.get("coords") or []
+    if len(coords) < 4:
+        return None
+    a, b = coords[0], coords[-1]
+    gap = haversine(a[0], a[1], b[0], b[1])
+    if gap < 1.0:
+        return route                      # already closed
+    if gap > 150.0:
+        return None                       # not a loop - drop it
+    # snap shut: repeat the start point (and mirror its elevation sample)
+    coords.append([a[0], a[1]])
+    eles = route.get("elevations")
+    if eles:
+        eles.append(eles[0])
+    route["elevation_profile"] = _profile(
+        [(c[0], c[1]) for c in coords], eles or [])
+    return route
 
 
 def _path_length(G, path):
